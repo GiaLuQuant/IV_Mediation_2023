@@ -22,7 +22,7 @@ Y: dependent variable
 library('haven')
 
 # reading data
-rawdata = read_sav('//Users/luzhiming/000我/Github/IV_Mediation_2023/Demonstration/DemoData.sav')
+rawdata = read_sav('/Users/luzhiming/000我/Github/IV_Mediation_2023/Demonstration/DemoData.sav')
 rawdata = data.frame(rawdata)
 
 # effect coding
@@ -44,25 +44,6 @@ fit.med.std = mediate(model.m = m1.med.std, model.y = m2.med.std, treat = "X", m
 summary(fit.med.std)
 ```
 
-## Non-IV SEM 
-
-```{r}
-library('lavaan')
-model0 = 'M~a*X+d*Dm
-         Y~cp*X+b*M'
-
-fit0 = sem(model=model0, data=data)
-summary(fit0)  # b.est = 0.171, Z-value = 2.086 
-IE.est0 = coef(fit0)['a']*coef(fit0)['b']
-
-covs0 = vcov(fit0)
-IE.se.est0 = sqrt(coef(fit0)['b']^2*covs0['a','a']+
-                    coef(fit0)['a']^2*covs0['b','b']+
-                    2*coef(fit0)['a']*coef(fit0)['b']*covs0['a','b'])
-
-Z.est0 = abs(IE.est0)/IE.se.est0
-SIG.nonIV = Z.est0 > qnorm(1-.025) #not significant
-```
 
 ## IV mediation approach
 
@@ -73,18 +54,16 @@ model1 = 'M~a*X+d*Dm
          M~~Y'
 
 fit1 = sem(model=model1, data=data)
-summary(fit1)  # b.est = 0.24, Z-value = 2.74
+summary(fit1)  
 
 IE.est = coef(fit1)['a']*coef(fit1)['b']
 
 # estimating the standard error of the indirect effect using delta method
 covs = vcov(fit1)
-IE.se.est = sqrt(coef(fit1)['b']^2*covs['a','a']+
-                   coef(fit1)['a']^2*covs['b','b']+
-                   2*coef(fit1)['a']*coef(fit1)['b']*covs['a','b'])
+IE.se.est = sqrt(coef(fit1)['b']^2*covs['a','a']+coef(fit1)['a']^2*covs['b','b']+ 2*coef(fit1)['a']*coef(fit1)['b']*covs['a','b'])
 
 Z.est = abs(IE.est)/IE.se.est
 
-SIG.IVmed = Z.est0 > qnorm(1-.025) #not significant
+SIG.IVmed = Z.est > qnorm(1-.025) #not significant
 
 ```

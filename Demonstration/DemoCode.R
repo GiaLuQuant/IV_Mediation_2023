@@ -1,9 +1,9 @@
-#################################
-# Dm: manipulation of the mediator 
-# M: measurement of the mediator
-# X: independent variable 
-# Y: dependent variable 
-
+####################################
+# Dm: manipulation of the mediator #
+# M: measurement of the mediator   #
+# X: independent variable          #
+# Y: dependent variable            #
+####################################
 
 
 # IV Mediation Illustration
@@ -23,31 +23,12 @@ data$M = scale(data$M); data$Y = scale(data$Y)
 
 
 
-## ImaiMed 
+## ImaiMed
 m1.med.std = lm(M~X*Dm, data = data)
 m2.med.std = lm(Y~X*M, data = data)
 fit.med.std = mediate(model.m = m1.med.std, model.y = m2.med.std, treat = "X", mediator = "M",
                       control.value = -0.5, treat.value = 0.5)
 summary(fit.med.std)
-
-
-
-## non-IV SEM
-model0 = 'M~a*X+d*Dm
-         Y~cp*X+b*M'
-
-fit0 = sem(model=model0, data=data)
-summary(fit0)  # b.est = 0.171, Z-value = 2.086 
-IE.est0 = coef(fit0)['a']*coef(fit0)['b']
-
-covs0 = vcov(fit0)
-IE.se.est0 = sqrt(coef(fit0)['b']^2*covs0['a','a']+
-                   coef(fit0)['a']^2*covs0['b','b']+
-                   2*coef(fit0)['a']*coef(fit0)['b']*covs0['a','b'])
-
-Z.est0 = abs(IE.est0)/IE.se.est0
-SIG.nonIV = Z.est0 > qnorm(1-.025) #not significant
-
 
 
 ## IV mediation
@@ -68,4 +49,5 @@ IE.se.est = sqrt(coef(fit1)['b']^2*covs['a','a']+
 
 Z.est = abs(IE.est)/IE.se.est
 
-SIG.IVmed = Z.est0 > qnorm(1-.025)#not significant
+SIG.IVmed = Z.est > qnorm(1-.025)#not significant
+pnorm(Z.est)
