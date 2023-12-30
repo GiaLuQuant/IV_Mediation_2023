@@ -44,26 +44,64 @@ fit.med.std = mediate(model.m = m1.med.std, model.y = m2.med.std, treat = "X", m
 summary(fit.med.std)
 ```
 
+## Non-IV approach using SEM
+```{r}
+library('lavaan')
+model0 = 'M~a*X+d*Dm
+        Y~cp*X+b*M+g*X:M'
+
+fit0 = sem(model=model0, data=data)
+summary(fit0)  # b.est = 0.18, Z-value = 2.24, p = 0.025
+
+# The IE estimates
+PNIE.est0 = coef(fit0)['a']*(coef(fit0)['b']-0.5*coef(fit0)['g'])
+TNIE.est0 = coef(fit0)['a']*(coef(fit0)['b']+0.5*coef(fit0)['g'])
+
+# estimating the standard error of the indirect effect using delta method
+
+covs0 = vcov(fit0)
+IE.vcov0 = matrix(c(covs0['a','a'], covs0['a','b'], covs0['a','g'],
+                    covs0['a','b'], covs0['b','b'], covs0['b','g'],
+                    covs0['a','g'], covs0['b','g'], covs0['g','g']),3,3)
+
+delta.f.PNIE0 = matrix(c(coef(fit0)['b']-0.5*coef(fit0)['g'], coef(fit0)['a'], -0.5*coef(fit0)['a']), 3, 1)
+delta.f.TNIE0 = matrix(c(coef(fit0)['b']+0.5*coef(fit0)['g'], coef(fit0)['a'], 0.5*coef(fit0)['a']), 3, 1)
+
+PNIE.SEest0 = sqrt(t(delta.f.PNIE0) %*% IE.vcov0 %*% delta.f.PNIE0)
+TNIE.SEest0 = sqrt(t(delta.f.TNIE0) %*% IE.vcov0 %*% delta.f.TNIE0)
+
+PNIE.Z.est0 = abs(PNIE.est0)/PNIE.SEest0; PNIE.p0 = pnorm(abs(PNIE.Z.est0))
+TNIE.Z.est0 = abs(TNIE.est0)/TNIE.SEest0; TNIE.p0 = pnorm(abs(TNIE.Z.est0))
+```
+
 
 ## IV mediation approach
 
 ```{r}
-library('lavaan')
 model1 = 'M~a*X+d*Dm
-         Y~cp*X+b*M
-         M~~Y'
+        Y~cp*X+b*M+g*X:M
+        M~~Y'
 
 fit1 = sem(model=model1, data=data)
-summary(fit1)  
+summary(fit1)  # b.est = 0.25, Z-value = 2.89, p = 0.004.
 
-IE.est = coef(fit1)['a']*coef(fit1)['b']
+# the IE estimates
+PNIE.est = coef(fit1)['a']*(coef(fit1)['b']-0.5*coef(fit1)['g'])
+TNIE.est = coef(fit1)['a']*(coef(fit1)['b']+0.5*coef(fit1)['g'])
 
 # estimating the standard error of the indirect effect using delta method
 covs = vcov(fit1)
-IE.se.est = sqrt(coef(fit1)['b']^2*covs['a','a']+coef(fit1)['a']^2*covs['b','b']+ 2*coef(fit1)['a']*coef(fit1)['b']*covs['a','b'])
+IE.vcov = matrix(c(covs['a','a'], covs['a','b'], covs['a','g'],
+                   covs['a','b'], covs['b','b'], covs['b','g'],
+                   covs['a','g'], covs['b','g'], covs['g','g']),3,3)
 
-Z.est = abs(IE.est)/IE.se.est
+delta.f.PNIE = matrix(c(coef(fit1)['b']-0.5*coef(fit1)['g'], coef(fit1)['a'], -0.5*coef(fit1)['a']), 3, 1)
+delta.f.TNIE = matrix(c(coef(fit1)['b']+0.5*coef(fit1)['g'], coef(fit1)['a'], 0.5*coef(fit1)['a']), 3, 1)
 
-SIG.IVmed = Z.est > qnorm(1-.025) #not significant
+PNIE.SEest = sqrt(t(delta.f.PNIE) %*% IE.vcov %*% delta.f.PNIE)
+TNIE.SEest = sqrt(t(delta.f.TNIE) %*% IE.vcov %*% delta.f.TNIE)
+
+PNIE.Z.est = abs(PNIE.est)/PNIE.SEest; PNIE.p = pnorm(abs(PNIE.Z.est))
+TNIE.Z.est = abs(TNIE.est)/TNIE.SEest; TNIE.p = pnorm(abs(TNIE.Z.est))
 
 ```
