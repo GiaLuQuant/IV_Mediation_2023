@@ -22,6 +22,9 @@ data = data.frame(X = rawdata$Gender, Dm = rawdata$Perf, M = rawdata$CEOperf, Y 
 data$M = scale(data$M); data$Y = scale(data$Y)
 
 
+# two-way ANOVA
+fit.aov = lm(Y~X*Dm, data)
+summary(fit.aov)
 
 ## ImaiMed
 m1.med.std = lm(M~X*Dm, data = data)
